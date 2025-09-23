@@ -123,7 +123,7 @@ public final class ShadeAwareAlignmentReporter {
         return new ShadeAlignmentResult(shadeConfigs, shadedArtifacts, unshadedArtifacts, shadedArtifactsWithPaths);
     }
 
-    public String generateShadeReport(final ShadeAlignmentResult result) throws IOException {
+    public String generateShadeReport(final ShadeAlignmentResult result, final Pattern alignmentPattern) throws IOException {
         try (StringWriter out = new StringWriter(); PrintWriter writer = new PrintWriter(out)) {
 
             if (!result.hasShadeConfigurations()) {
@@ -157,11 +157,16 @@ public final class ShadeAwareAlignmentReporter {
                 writer.println();
             }
 
-            if (!result.getShadedArtifacts()
-                .isEmpty()) {
-                writer.println("Artifacts Affected by Shading");
-                writer.println("-----------------------------");
-                for (Artifact artifact : result.getShadedArtifacts()) {
+            // Only show unaligned shaded artifacts in the main report
+            List<Artifact> unalignedShadedArtifacts = result.getShadedArtifacts()
+                .stream()
+                .filter(artifact -> !alignmentPattern.matcher(artifact.getVersion()).find())
+                .collect(java.util.stream.Collectors.toList());
+
+            if (!unalignedShadedArtifacts.isEmpty()) {
+                writer.println("Unaligned Artifacts Affected by Shading");
+                writer.println("---------------------------------------");
+                for (Artifact artifact : unalignedShadedArtifacts) {
                     writer.println(String.format("  - %s", artifact));
                 }
                 writer.println();
@@ -210,42 +215,44 @@ public final class ShadeAwareAlignmentReporter {
             if (result.hasPathInformation() && !result.getShadedArtifactsWithPaths()
                 .isEmpty()) {
                 writer.println();
-                writer.println("Shaded Artifacts with Dependency Paths:");
-                writer.println("---------------------------------------");
+                writer.println("Unaligned Shaded Artifacts with Dependency Paths:");
+                writer.println("-------------------------------------------------");
 
-                // Group by direct vs transitive
-                List<ArtifactWithPath> directShaded = result.getShadedArtifactsWithPaths()
+                // Group by direct vs transitive, but only show unaligned ones
+                List<ArtifactWithPath> directUnalignedShaded = result.getShadedArtifactsWithPaths()
                     .stream()
                     .filter(ArtifactWithPath::isDirect)
+                    .filter(awp -> !alignmentPattern.matcher(awp.getArtifact().getVersion()).find())
                     .sorted((a, b) -> a.getArtifact()
                         .toString()
                         .compareTo(b.getArtifact()
                             .toString()))
                     .collect(java.util.stream.Collectors.toList());
 
-                List<ArtifactWithPath> transitiveShaded = result.getShadedArtifactsWithPaths()
+                List<ArtifactWithPath> transitiveUnalignedShaded = result.getShadedArtifactsWithPaths()
                     .stream()
                     .filter(ArtifactWithPath::isTransitive)
+                    .filter(awp -> !alignmentPattern.matcher(awp.getArtifact().getVersion()).find())
                     .sorted((a, b) -> a.getArtifact()
                         .toString()
                         .compareTo(b.getArtifact()
                             .toString()))
                     .collect(java.util.stream.Collectors.toList());
 
-                if (!directShaded.isEmpty()) {
+                if (!directUnalignedShaded.isEmpty()) {
                     writer.println();
-                    writer.println("Direct Shaded Artifacts:");
-                    writer.println("------------------------");
-                    for (ArtifactWithPath awp : directShaded) {
+                    writer.println("Direct Unaligned Shaded Artifacts:");
+                    writer.println("----------------------------------");
+                    for (ArtifactWithPath awp : directUnalignedShaded) {
                         writer.println(String.format("  - %s", awp.getArtifact()));
                     }
                 }
 
-                if (!transitiveShaded.isEmpty()) {
+                if (!transitiveUnalignedShaded.isEmpty()) {
                     writer.println();
-                    writer.println("Transitive Shaded Artifacts:");
-                    writer.println("----------------------------");
-                    for (ArtifactWithPath awp : transitiveShaded) {
+                    writer.println("Transitive Unaligned Shaded Artifacts:");
+                    writer.println("--------------------------------------");
+                    for (ArtifactWithPath awp : transitiveUnalignedShaded) {
                         writer.println(String.format("  - %s", awp.formatDependencyPath()));
                     }
                 }

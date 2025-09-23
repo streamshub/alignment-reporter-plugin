@@ -286,7 +286,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
                         artifactsWithPathsForShadeAnalysis);
 
                 if (printShadeConfigurations) {
-                    shadeReport = shadeReporter.generateShadeReport(shadeResult);
+                    shadeReport = shadeReporter.generateShadeReport(shadeResult, alignmentPattern);
                 }
                 shadeAlignmentSummary = shadeReporter.generateShadeAlignmentSummary(shadeResult, alignmentPattern);
             }
