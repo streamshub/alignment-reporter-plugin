@@ -168,8 +168,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * @param log    where to log information.
      * @throws IOException if an I/O error occurs
      */
-    private static void log(final String string, final Log log)
-        throws IOException {
+    private static void log(final String string, final Log log) throws IOException {
         try (BufferedReader reader = new BufferedReader(new StringReader(string))) {
             String line;
 
@@ -183,8 +182,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * @see org.apache.maven.plugin.Mojo#execute()
      */
     @Override
-    public void execute()
-        throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         if (isSkip()) {
             getLog().info("Skipping plugin execution");
             return;
@@ -362,8 +360,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      *
      * @param artifactFilter filter
      */
-    protected abstract Set<DependencyNode> getDirectDependencies(ArtifactFilter artifactFilter)
-        throws MojoExecutionException;
+    protected abstract Set<DependencyNode> getDirectDependencies(ArtifactFilter artifactFilter) throws MojoExecutionException;
 
     private String reportDirectDependencies(final List<Artifact> list, final String prefix) throws IOException {
 
@@ -378,8 +375,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
         }
     }
 
-    private String reportUnalignedTransitiveDependenciesSummary(final Set<Artifact> summary)
-        throws IOException {
+    private String reportUnalignedTransitiveDependenciesSummary(final Set<Artifact> summary) throws IOException {
         try (StringWriter out = new StringWriter();
              PrintWriter writer = new PrintWriter(out)) {
             if (!summary.isEmpty()) {

@@ -32,8 +32,7 @@ import org.apache.maven.shared.dependency.graph.DependencyNode;
 @Mojo(name = "aggregate-report", aggregator = true, requiresDependencyCollection = ResolutionScope.TEST, threadSafe = true)
 public class AggregateAlignmentReporterMojo extends AbstractAlignmentReporterMojo {
     @Override
-    protected Set<DependencyNode> getDirectDependencies(final ArtifactFilter artifactFilter)
-        throws MojoExecutionException {
+    protected Set<DependencyNode> getDirectDependencies(final ArtifactFilter artifactFilter) throws MojoExecutionException {
         Set<DependencyNode> dependencies = new HashSet<>();
 
         for (MavenProject reactorProject : reactorProjects) {
