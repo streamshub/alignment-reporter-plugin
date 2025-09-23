@@ -154,7 +154,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * and <code>flink-*</code> will exclude all modules whose name starts with "flink-".
      * </p>
      */
-    @Parameter( property = "excludeModules" )
+    @Parameter(property = "excludeModules")
     private String excludeModules;
 
     /**
@@ -162,7 +162,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * When enabled, the plugin will analyze shade configurations across all projects and provide additional
      * reporting on shaded dependencies.
      */
-    @Parameter( property = "analyzeShade", defaultValue = "false" )
+    @Parameter(property = "analyzeShade", defaultValue = "false")
     private boolean analyzeShade;
 
     /**
@@ -170,7 +170,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * Only has effect when analyzeShade=true. When enabled, shows all shade plugin configurations
      * found in the project with their relocation mappings.
      */
-    @Parameter( property = "printShadeConfigurations", defaultValue = "false" )
+    @Parameter(property = "printShadeConfigurations", defaultValue = "false")
     private boolean printShadeConfigurations;
 
     /**
@@ -179,7 +179,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * dependencies for shade impact, providing comprehensive coverage of all artifacts that
      * could be affected by shading configurations.
      */
-    @Parameter( property = "includeTransitiveShaded", defaultValue = "false" )
+    @Parameter(property = "includeTransitiveShaded", defaultValue = "false")
     private boolean includeTransitiveShaded;
 
     private ArtifactFilter scopeFilter;
@@ -259,32 +259,32 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
 
             String unalignedTransitivesStr = reportUnalignedTransitiveDependenciesSummary(unalignedTransitives);
             String unalignedTransitiveDetail = reportUnalignedTransitiveDependencyDetail(alignedDirectDeps, excludeDependencyFilter);
-            
+
             String shadeReport = "";
             String shadeAlignmentSummary = "";
-            
+
             if (analyzeShade) {
                 ShadeAwareAlignmentReporter shadeReporter = new ShadeAwareAlignmentReporter(getLog());
-                
+
                 // Collect artifacts for shade analysis
                 List<Artifact> artifactsForShadeAnalysis;
                 List<ArtifactWithPath> artifactsWithPathsForShadeAnalysis = null;
-                
+
                 if (includeTransitiveShaded) {
                     artifactsWithPathsForShadeAnalysis = getAllTransitiveDependencyArtifactsWithPaths(directDependencies);
                     artifactsForShadeAnalysis = artifactsWithPathsForShadeAnalysis.stream()
-                            .map(ArtifactWithPath::getArtifact)
-                            .collect(Collectors.toList());
+                        .map(ArtifactWithPath::getArtifact)
+                        .collect(Collectors.toList());
                 } else {
                     artifactsForShadeAnalysis = new ArrayList<>(dependencyArtifacts);
                 }
-                
-                ShadeAwareAlignmentReporter.ShadeAlignmentResult shadeResult = 
-                    shadeReporter.analyzeShadeAlignment(getReactorProjectsForShadeAnalysis(), 
-                                                      artifactsForShadeAnalysis, 
-                                                      alignmentPattern,
-                                                      artifactsWithPathsForShadeAnalysis);
-                
+
+                ShadeAwareAlignmentReporter.ShadeAlignmentResult shadeResult =
+                    shadeReporter.analyzeShadeAlignment(getReactorProjectsForShadeAnalysis(),
+                        artifactsForShadeAnalysis,
+                        alignmentPattern,
+                        artifactsWithPathsForShadeAnalysis);
+
                 if (printShadeConfigurations) {
                     shadeReport = shadeReporter.generateShadeReport(shadeResult);
                 }
@@ -299,7 +299,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
                 write(unalignedDirectStr, outputFile);
                 write(unalignedTransitivesStr, outputFile);
                 write(unalignedTransitiveDetail, outputFile);
-                
+
                 if (analyzeShade && !shadeReport.isEmpty()) {
                     write(shadeReport, outputFile);
                 }
@@ -314,7 +314,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
                 log(unalignedDirectStr, getLog());
                 log(unalignedTransitivesStr, getLog());
                 log(unalignedTransitiveDetail, getLog());
-                
+
                 if (analyzeShade && !shadeReport.isEmpty()) {
                     log(shadeReport, getLog());
                 }
@@ -646,10 +646,9 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * @param projects the list of projects to filter
      * @return the filtered list of projects
      */
-    protected List<MavenProject> filterModules(List<MavenProject> projects)
-    {
-        if (excludeModules == null || excludeModules.trim().isEmpty())
-        {
+    protected List<MavenProject> filterModules(final List<MavenProject> projects) {
+        if (excludeModules == null || excludeModules.trim()
+            .isEmpty()) {
             return projects;
         }
 
@@ -657,33 +656,29 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
         getLog().debug(String.format("+ Filtering modules by exclude patterns: %s", patterns));
 
         return projects.stream()
-                .filter(project -> {
-                    String artifactId = project.getArtifactId();
-                    for (String pattern : patterns)
-                    {
-                        String trimmedPattern = pattern.trim();
-                        if (matchesPattern(artifactId, trimmedPattern))
-                        {
-                            getLog().debug(String.format("+ Excluding module: %s (matched pattern: %s)", artifactId, trimmedPattern));
-                            return false;
-                        }
+            .filter(project -> {
+                String artifactId = project.getArtifactId();
+                for (String pattern : patterns) {
+                    String trimmedPattern = pattern.trim();
+                    if (matchesPattern(artifactId, trimmedPattern)) {
+                        getLog().debug(String.format("+ Excluding module: %s (matched pattern: %s)", artifactId, trimmedPattern));
+                        return false;
                     }
-                    return true;
-                })
-                .collect(Collectors.toList());
+                }
+                return true;
+            })
+            .collect(Collectors.toList());
     }
 
     /**
      * Checks if a string matches a pattern with wildcard support.
      *
-     * @param text the text to match
+     * @param text    the text to match
      * @param pattern the pattern (supports * wildcards)
      * @return true if the text matches the pattern
      */
-    private boolean matchesPattern(String text, String pattern)
-    {
-        if (pattern.equals("*"))
-        {
+    private boolean matchesPattern(final String text, final String pattern) {
+        if (pattern.equals("*")) {
             return true;
         }
 
@@ -698,8 +693,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      *
      * @return the list of projects for shade analysis
      */
-    protected List<MavenProject> getReactorProjectsForShadeAnalysis()
-    {
+    protected List<MavenProject> getReactorProjectsForShadeAnalysis() {
         return filterModules(reactorProjects);
     }
 
@@ -710,16 +704,15 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * @param directDependencies the set of direct dependency nodes to traverse
      * @return a list of all artifacts (direct + transitive)
      */
-    private List<Artifact> getAllTransitiveDependencyArtifacts(Set<DependencyNode> directDependencies)
-    {
+    private List<Artifact> getAllTransitiveDependencyArtifacts(final Set<DependencyNode> directDependencies) {
         List<ArtifactWithPath> allArtifactsWithPaths = getAllTransitiveDependencyArtifactsWithPaths(directDependencies);
-        
+
         List<Artifact> artifacts = allArtifactsWithPaths.stream()
-                .map(ArtifactWithPath::getArtifact)
-                .collect(Collectors.toList());
-        
+            .map(ArtifactWithPath::getArtifact)
+            .collect(Collectors.toList());
+
         getLog().debug(String.format("Collected %d total artifacts (direct + transitive) for shade analysis", artifacts.size()));
-        
+
         return artifacts;
     }
 
@@ -729,35 +722,35 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
      * @param directDependencies the set of direct dependency nodes to traverse
      * @return a list of all artifacts with their paths (direct + transitive)
      */
-    private List<ArtifactWithPath> getAllTransitiveDependencyArtifactsWithPaths(Set<DependencyNode> directDependencies)
-    {
+    private List<ArtifactWithPath> getAllTransitiveDependencyArtifactsWithPaths(final Set<DependencyNode> directDependencies) {
         Set<ArtifactWithPath> allArtifacts = new HashSet<>();
-        
+
         for (DependencyNode directDependency : directDependencies) {
             collectAllArtifactsWithPathsFromNode(directDependency, new ArrayList<>(), allArtifacts);
         }
-        
+
         getLog().debug(String.format("Collected %d total artifacts with paths for shade analysis", allArtifacts.size()));
-        
+
         return new ArrayList<>(allArtifacts);
     }
 
     /**
      * Recursively collects all artifacts with their paths from a dependency node and its children.
      *
-     * @param node the dependency node to traverse
+     * @param node        the dependency node to traverse
      * @param currentPath the current dependency path (not including this node)
-     * @param collector the set to collect artifacts with paths into
+     * @param collector   the set to collect artifacts with paths into
      */
-    private void collectAllArtifactsWithPathsFromNode(DependencyNode node, List<Artifact> currentPath, Set<ArtifactWithPath> collector)
-    {
+    private void collectAllArtifactsWithPathsFromNode(final DependencyNode node,
+                                                      final List<Artifact> currentPath,
+                                                      final Set<ArtifactWithPath> collector) {
         // Create the path including this node
         List<Artifact> pathWithThisNode = new ArrayList<>(currentPath);
         pathWithThisNode.add(node.getArtifact());
-        
+
         // Add the current node's artifact with its path
         collector.add(new ArtifactWithPath(node.getArtifact(), pathWithThisNode));
-        
+
         // Recursively process all children
         for (DependencyNode child : node.getChildren()) {
             collectAllArtifactsWithPathsFromNode(child, pathWithThisNode, collector);

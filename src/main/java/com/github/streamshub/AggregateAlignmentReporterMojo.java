@@ -37,7 +37,7 @@ public class AggregateAlignmentReporterMojo extends AbstractAlignmentReporterMoj
         Set<DependencyNode> dependencies = new HashSet<>();
 
         List<MavenProject> filteredProjects = filterModules(reactorProjects);
-        
+
         for (MavenProject reactorProject : filteredProjects) {
             dependencies.addAll(getDirectDependencies(reactorProject, artifactFilter));
         }
