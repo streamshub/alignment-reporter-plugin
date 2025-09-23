@@ -1,4 +1,4 @@
-package com.github.k_wall;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,30 +17,20 @@ package com.github.k_wall;/*
  * under the License.
  */
 
-import java.util.HashSet;
+package com.github.streamshub;
+
 import java.util.Set;
 
 import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 
-@Mojo(name = "aggregate-report", aggregator = true, requiresDependencyCollection = ResolutionScope.TEST, threadSafe =
-        true)
-public class AggregateAlignmentReporterMojo extends AbstractAlignmentReporterMojo
-{
+@Mojo(name = "report", requiresDependencyCollection = ResolutionScope.TEST, threadSafe = true)
+public class AlignmentReporterMojo extends AbstractAlignmentReporterMojo {
     @Override
-    protected Set<DependencyNode> getDirectDependencies(final ArtifactFilter artifactFilter)
-            throws MojoExecutionException
-    {
-        Set<DependencyNode> dependencies = new HashSet<>();
-
-        for (MavenProject reactorProject : reactorProjects) {
-            dependencies.addAll(getDirectDependencies(reactorProject, artifactFilter));
-        }
-
-        return dependencies;
+    protected Set<DependencyNode> getDirectDependencies(final ArtifactFilter artifactFilter) throws MojoExecutionException {
+        return getDirectDependencies(getProject(), artifactFilter);
     }
 }
