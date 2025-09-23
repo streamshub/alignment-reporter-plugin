@@ -58,6 +58,10 @@ under the License.
         <maven-dependency-tree.version>3.3.0</maven-dependency-tree.version>
         <maven-plugin-annotations.version>3.5.2</maven-plugin-annotations.version>
         <maven-common-artifact-filters.version>3.0.1</maven-common-artifact-filters.version>
+        <maven-checkstyle.version>3.5.0</maven-checkstyle.version>
+        <checkstyle.version>10.18.0</checkstyle.version>
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <maven-plugin-plugin.version>3.15.1</maven-plugin-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -122,17 +126,46 @@ under the License.
                     <skip>false</skip>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven-checkstyle.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>checkstyle/checkstyle.xml</configLocation>
+                    <suppressionsLocation>checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <failOnViolation>true</failOnViolation>
+                    <violationSeverity>warning</violationSeverity>
+                    <consoleOutput>true</consoleOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.14.0</version>
+                    <version>${maven-compiler-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.15.1</version>
+                    <version>${maven-plugin-plugin.version}</version>
                     <configuration>
                         <goalPrefix>alignment-reporter</goalPrefix>
                     </configuration>

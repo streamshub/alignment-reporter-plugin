@@ -1,4 +1,4 @@
-package com.github.k_wall;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@ package com.github.k_wall;/*
  * under the License.
  */
 
+package com.github.streamshub;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -67,13 +68,12 @@ import org.apache.maven.shared.dependency.graph.traversal.FilteringDependencyNod
  *
  * <p>Based ideas and code from the Maven Dependency Plugin project.</p>
  */
-public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
-{
+public abstract class AbstractAlignmentReporterMojo extends AbstractMojo {
     private static final Comparator<Artifact> ARTIFACT_COMPARATOR = Comparator.comparing(Artifact::getGroupId)
-            .thenComparing(Artifact::getArtifactId);
+        .thenComparing(Artifact::getArtifactId);
     private static final Comparator<DependencyNode> DEPENDENCY_COMPARATOR = Comparator.comparing(
-            DependencyNode::getArtifact,
-            ARTIFACT_COMPARATOR);
+        DependencyNode::getArtifact,
+        ARTIFACT_COMPARATOR);
     /**
      * The Maven project.
      */
@@ -133,7 +133,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
      * <pre>
      * [groupId]:[artifactId]:[type]:[version]
      * </pre>
-     *
+     * <p>
      * where each pattern segment is optional and supports full and partial <code>*</code> wildcards. An empty pattern
      * segment is treated as an implicit wildcard.
      * <p>
@@ -143,24 +143,20 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
      *
      * @see StrictPatternExcludesArtifactFilter
      */
-    @Parameter( property = "excludes" )
+    @Parameter(property = "excludes")
     private String excludes;
 
     private ArtifactFilter scopeFilter;
 
-    private static void write(String string, File file)
-            throws IOException
-    {
+    private static void write(final String string, final File file) throws IOException {
         write(string, file, true);
     }
 
-    private static void write(String string, File file, boolean append)
-            throws IOException
-    {
-        file.getParentFile().mkdirs();
+    private static void write(final String string, final File file, final boolean append) throws IOException {
+        file.getParentFile()
+            .mkdirs();
 
-        try (FileWriter writer = new FileWriter(file, append))
-        {
+        try (FileWriter writer = new FileWriter(file, append)) {
             writer.write(string);
         }
     }
@@ -172,15 +168,11 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
      * @param log    where to log information.
      * @throws IOException if an I/O error occurs
      */
-    private static void log(String string, Log log)
-            throws IOException
-    {
-        try (BufferedReader reader = new BufferedReader(new StringReader(string)))
-        {
+    private static void log(final String string, final Log log) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new StringReader(string))) {
             String line;
 
-            while ((line = reader.readLine()) != null)
-            {
+            while ((line = reader.readLine()) != null) {
                 log.info(line);
             }
         }
@@ -190,11 +182,8 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
      * @see org.apache.maven.plugin.Mojo#execute()
      */
     @Override
-    public void execute()
-            throws MojoExecutionException, MojoFailureException
-    {
-        if (isSkip())
-        {
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        if (isSkip()) {
             getLog().info("Skipping plugin execution");
             return;
         }
@@ -202,41 +191,40 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
         scopeFilter = createScopeResolvingArtifactFilter();
         ArtifactFilter excludeFilter = createExcludeFilter();
 
-        Set<DependencyNode> directDependencies = getDirectDependencies(new AndArtifactFilter(Arrays.asList(scopeFilter, excludeFilter)));
+        Set<DependencyNode> directDependencies = getDirectDependencies(
+            new AndArtifactFilter(Arrays.asList(scopeFilter, excludeFilter)));
 
         Set<Artifact> dependencyArtifacts = directDependencies.stream()
-                                                              .map(DependencyNode::getArtifact)
-                                                              .collect(Collectors.toSet());
+            .map(DependencyNode::getArtifact)
+            .collect(Collectors.toSet());
 
         List<Artifact> alignedDirect = dependencyArtifacts.stream()
-                                                          .filter(artifact -> alignmentPattern.matcher(artifact.getVersion())
-                                                                                              .find())
-                                                          .sorted(ARTIFACT_COMPARATOR)
-                                                          .collect(Collectors.toList());
+            .filter(artifact -> alignmentPattern.matcher(artifact.getVersion())
+                .find())
+            .sorted(ARTIFACT_COMPARATOR)
+            .collect(Collectors.toList());
 
         List<Artifact> unalignedDirect = dependencyArtifacts.stream()
-                                                            .filter(artifact -> !alignmentPattern.matcher(artifact.getVersion())
-                                                                                                 .find())
-                                                            .sorted(ARTIFACT_COMPARATOR)
-                                                            .collect(Collectors.toList());
+            .filter(artifact -> !alignmentPattern.matcher(artifact.getVersion())
+                .find())
+            .sorted(ARTIFACT_COMPARATOR)
+            .collect(Collectors.toList());
 
         List<DependencyNode> alignedDirectDeps = directDependencies.stream()
-                                                            .filter(dn -> alignedDirect.contains(dn.getArtifact()))
-                                                            .collect(Collectors.toList());
+            .filter(dn -> alignedDirect.contains(dn.getArtifact()))
+            .collect(Collectors.toList());
 
         DependencyNodeFilter excludeDependencyFilter = new ArtifactDependencyNodeFilter(excludeFilter);
         Set<Artifact> unalignedTransitives = getArtifactsWithUnalignedTransitives(alignedDirectDeps, excludeDependencyFilter);
 
-        try
-        {
+        try {
             String alignedDirectStr = reportDirectDependencies(alignedDirect, "Aligned");
             String unalignedDirectStr = reportDirectDependencies(unalignedDirect, "Unaligned");
 
             String unalignedTransitivesStr = reportUnalignedTransitiveDependenciesSummary(unalignedTransitives);
             String unalignedTransitiveDetail = reportUnalignedTransitiveDependencyDetail(alignedDirectDeps, excludeDependencyFilter);
 
-            if (outputFile != null)
-            {
+            if (outputFile != null) {
                 String projectTitle = getProjectTitle();
 
                 write(projectTitle, outputFile, this.appendOutput);
@@ -245,60 +233,53 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
                 write(unalignedTransitivesStr, outputFile);
                 write(unalignedTransitiveDetail, outputFile);
 
-                getLog().info(String.format("Wrote alignment report tree to: %s", outputFile));
-            }
-            else
-            {
+                getLog().info(String.format("Wrote alignment report tree to: %s",
+                    outputFile));
+            } else {
                 log(alignedDirectStr, getLog());
                 log(unalignedDirectStr, getLog());
                 log(unalignedTransitivesStr, getLog());
                 log(unalignedTransitiveDetail, getLog());
             }
-        }
-        catch (IOException exception)
-        {
-            throw new MojoExecutionException("Cannot serialise project dependency graph", exception);
+        } catch (IOException exception) {
+            throw new MojoExecutionException(
+                "Cannot serialise project dependency graph", exception);
         }
 
-        if (failOnUnalignedDependencies)
-        {
+        if (failOnUnalignedDependencies) {
             StringBuilder failureMessages = new StringBuilder();
 
-            if (!unalignedDirect.isEmpty())
-            {
-                failureMessages.append(String.format("There %s %d unaligned direct dependenc%s",
-                                                     unalignedDirect.size() == 1 ? "is" : "are",
-                                                     unalignedDirect.size(),
-                                                     unalignedDirect.size() == 1 ? "y" : "ies"));
+            if (!unalignedDirect.isEmpty()) {
+                failureMessages.append(String.format(
+                    "There %s %d unaligned direct dependenc%s",
+                    unalignedDirect.size() == 1 ? "is" : "are",
+                    unalignedDirect.size(),
+                    unalignedDirect.size() == 1 ? "y" : "ies"));
             }
 
-            if (!unalignedTransitives.isEmpty())
-            {
+            if (!unalignedTransitives.isEmpty()) {
                 failureMessages.append(failureMessages.length() > 0 ? " and there" : "There");
 
                 failureMessages.append(String.format(
-                        " %s %d aligned direct dependenc%s with at least one unaligned transitive dependency",
-                        unalignedTransitives.size() == 1 ? "is" : "are",
-                        unalignedTransitives.size(),
-                        unalignedTransitives.size() == 1 ? "y" : "ies"));
-            }
-            else if (failureMessages.length() > 0)
-            {
+                    " %s %d aligned direct dependenc%s with at least one unaligned transitive dependency",
+                    unalignedTransitives.size() == 1 ? "is" : "are",
+                    unalignedTransitives.size(),
+                    unalignedTransitives.size() == 1 ? "y" : "ies"));
+            } else if (failureMessages.length() > 0) {
                 failureMessages.append(".");
             }
 
-            if (failureMessages.length() > 0)
-            {
+            if (failureMessages.length() > 0) {
                 throw new MojoFailureException(failureMessages.toString());
             }
         }
     }
 
-    protected Set<DependencyNode> getDirectDependencies(MavenProject reactorProject, ArtifactFilter artifactFilter)
-            throws MojoExecutionException  {
+    protected Set<DependencyNode> getDirectDependencies(final MavenProject reactorProject, final ArtifactFilter artifactFilter)
+        throws MojoExecutionException {
 
         ProjectBuildingRequest buildingRequest =
-                new DefaultProjectBuildingRequest(session.getProjectBuildingRequest());
+            new DefaultProjectBuildingRequest(session.getProjectBuildingRequest());
 
         Artifact projectTestJar = new org.apache.maven.project.artifact.ProjectArtifact(reactorProject);
         projectTestJar.setScope("test");
@@ -320,18 +301,23 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
             projectDependency.setGroupId(reactorProject.getGroupId());
             projectDependency.setArtifactId(reactorProject.getArtifactId());
             projectDependency.setVersion(reactorProject.getVersion());
-            projectDependency.setType(reactorProject.getArtifact().getType());
+            projectDependency.setType(reactorProject.getArtifact()
+                .getType());
 
             MavenProject proxy = new MavenProject();
             proxy.setArtifact(new org.apache.maven.project.artifact.ProjectArtifact(reactorProject));
-            proxy.getModel().setDependencyManagement(reactorProject.getDependencyManagement());
-            proxy.getDependencies().add(projectDependency);
+            proxy.getModel()
+                .setDependencyManagement(reactorProject.getDependencyManagement());
+            proxy.getDependencies()
+                .add(projectDependency);
             buildingRequest.setProject(proxy);
         }
 
         buildingRequest.setResolveDependencies(true);
 
-        Set<Artifact> projectArtifacts = reactorProjects.stream().map(MavenProject::getArtifact).collect(Collectors.toSet());
+        Set<Artifact> projectArtifacts = reactorProjects.stream()
+            .map(MavenProject::getArtifact)
+            .collect(Collectors.toSet());
         DependencyNode projectRoot;
 
         try {
@@ -341,24 +327,28 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
         }
 
         Stream<DependencyNode> dependencyStream = projectRoot
-                .getChildren()
-                .stream();
+            .getChildren()
+            .stream();
 
         if (!scopeFilter.include(projectTestJar)) {
             /*
              * If a proxy project was used, we must map dependencies from an additional level
              * down in the graph.
              */
-            dependencyStream = dependencyStream.flatMap(node -> node.getChildren().stream());
+            dependencyStream = dependencyStream.flatMap(node -> node.getChildren()
+                .stream());
         }
 
         Set<DependencyNode> dependencies = dependencyStream
-                .filter(node -> !projectArtifacts.contains(node.getArtifact()))
-                .collect(Collectors.toSet());
+            .filter(node -> !projectArtifacts.contains(node.getArtifact()))
+            .collect(Collectors.toSet());
 
         if (getLog().isDebugEnabled()) {
-            for (DependencyNode dependency : dependencies.stream().sorted(DEPENDENCY_COMPARATOR).collect(Collectors.toList())) {
-                getLog().debug(String.format("Project %s, found direct dependency %s", reactorProject.getArtifact(), dependency.getArtifact()));
+            for (DependencyNode dependency : dependencies.stream()
+                .sorted(DEPENDENCY_COMPARATOR)
+                .collect(Collectors.toList())) {
+                getLog().debug(String.format("Project %s, found direct dependency %s",
+                    reactorProject.getArtifact(), dependency.getArtifact()));
             }
         }
 
@@ -370,16 +360,13 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
      *
      * @param artifactFilter filter
      */
-    protected abstract Set<DependencyNode> getDirectDependencies(final ArtifactFilter artifactFilter)
-            throws MojoExecutionException;
+    protected abstract Set<DependencyNode> getDirectDependencies(ArtifactFilter artifactFilter) throws MojoExecutionException;
 
-    private String reportDirectDependencies(final List<Artifact> list, final String prefix) throws IOException
-    {
+    private String reportDirectDependencies(final List<Artifact> list, final String prefix) throws IOException {
 
-        try (StringWriter out = new StringWriter(); PrintWriter writer = new PrintWriter(out))
-        {
+        try (StringWriter out = new StringWriter(); PrintWriter writer = new PrintWriter(out)) {
             String title =
-                    String.format("%d %s direct dependenc%s", list.size(), prefix, list.size() == 1 ? "y" : "ies");
+                String.format("%d %s direct dependenc%s", list.size(), prefix, list.size() == 1 ? "y" : "ies");
             writer.println(title);
             writer.println("-".repeat(title.length()));
             list.forEach(artifact -> writer.println(String.format("%s - %s", prefix, artifact)));
@@ -388,22 +375,18 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
         }
     }
 
-    private String reportUnalignedTransitiveDependenciesSummary(final Set<Artifact> summary)
-            throws IOException
-    {
+    private String reportUnalignedTransitiveDependenciesSummary(final Set<Artifact> summary) throws IOException {
         try (StringWriter out = new StringWriter();
-             PrintWriter writer = new PrintWriter(out))
-        {
-            if (!summary.isEmpty())
-            {
-
+             PrintWriter writer = new PrintWriter(out)) {
+            if (!summary.isEmpty()) {
                 String title = "Summary - Aligned direct dependencies with unaligned transitive dependencies";
                 writer.println(title);
                 writer.println("-".repeat(title.length()));
 
                 summary.stream()
-                       .sorted(ARTIFACT_COMPARATOR)
-                       .forEach(a -> writer.println(String.format("Incompletely aligned - %s", a)));
+                    .sorted(ARTIFACT_COMPARATOR)
+                    .forEach(a -> writer.println(
+                        String.format("Incompletely aligned - %s", a)));
 
                 writer.println();
             }
@@ -411,30 +394,27 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
         }
     }
 
-    private Set<Artifact> getArtifactsWithUnalignedTransitives(final List<DependencyNode> alignedDirectDeps,
-                                                               final DependencyNodeFilter nodeFilter)
-    {
+    private Set<Artifact> getArtifactsWithUnalignedTransitives(
+        final List<DependencyNode> alignedDirectDeps,
+        final DependencyNodeFilter nodeFilter) {
         Set<Artifact> summary = new HashSet<>();
 
         alignedDirectDeps.forEach(node -> {
-            node.accept(new FilteringDependencyNodeVisitor(new DependencyNodeVisitor()
-            {
+            node.accept(new FilteringDependencyNodeVisitor(new DependencyNodeVisitor() {
                 Deque<Artifact> deque = new ArrayDeque<>();
 
                 @Override
-                public boolean visit(final DependencyNode dependencyNode)
-                {
+                public boolean visit(final DependencyNode dependencyNode) {
                     Artifact artifact = dependencyNode.getArtifact();
                     deque.addLast(artifact);
                     return true;
                 }
 
                 @Override
-                public boolean endVisit(final DependencyNode dependencyNode)
-                {
+                public boolean endVisit(final DependencyNode dependencyNode) {
                     Artifact artifact = dependencyNode.getArtifact();
-                    if (!alignmentPattern.matcher(artifact.getVersion()).find())
-                    {
+                    if (!alignmentPattern.matcher(artifact.getVersion())
+                        .find()) {
                         Artifact head = deque.getFirst();
                         summary.add(head);
                     }
@@ -447,17 +427,14 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
     }
 
     private String reportUnalignedTransitiveDependencyDetail(final List<DependencyNode> alignedNodes,
-                                                             final DependencyNodeFilter nodeFilter) throws IOException
-    {
+                                                             final DependencyNodeFilter nodeFilter) throws IOException {
         List<List<Artifact>> unalignedDeps = new ArrayList<>();
 
         alignedNodes.forEach(node -> createTransitiveDependenciesAlignmentReportForNode(unalignedDeps, node, nodeFilter));
 
-        try (StringWriter out = new StringWriter(); PrintWriter writer = new PrintWriter(out))
-        {
+        try (StringWriter out = new StringWriter(); PrintWriter writer = new PrintWriter(out)) {
 
-            if (!unalignedDeps.isEmpty())
-            {
+            if (!unalignedDeps.isEmpty()) {
                 String title = "Detail - Aligned direct dependencies with unaligned transitive dependencies";
                 writer.println(title);
                 writer.println("-".repeat(title.length()));
@@ -467,21 +444,19 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
                     .sorted((e1, e2) -> ARTIFACT_COMPARATOR.compare(e1.get(0), e2.get(0)))
                     .forEach(x -> {
 
-                    writer.print("Unaligned transitive - ");
-                    Iterator<Artifact> itr = x.iterator();
-                    while (itr.hasNext())
-                    {
-                        Artifact a = itr.next();
-                        writer.append(a.toString());
+                        writer.print("Unaligned transitive - ");
+                        Iterator<Artifact> itr = x.iterator();
+                        while (itr.hasNext()) {
+                            Artifact a = itr.next();
+                            writer.append(a.toString());
 
-                        if (itr.hasNext())
-                        {
-                            writer.print(" <- ");
+                            if (itr.hasNext()) {
+                                writer.print(" <- ");
+                            }
                         }
-                    }
 
-                    writer.println();
-                });
+                        writer.println();
+                    });
 
                 writer.println();
             }
@@ -490,27 +465,25 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
         }
     }
 
-    private void createTransitiveDependenciesAlignmentReportForNode(final List<List<Artifact>> deps,
-                                                                    final DependencyNode node,
-                                                                    final DependencyNodeFilter nodeFilter)
-    {
-        node.accept(new FilteringDependencyNodeVisitor(new DependencyNodeVisitor()
-        {
+    private void createTransitiveDependenciesAlignmentReportForNode(
+        final List<List<Artifact>> deps,
+        final DependencyNode node,
+        final DependencyNodeFilter nodeFilter) {
+        node.accept(new FilteringDependencyNodeVisitor(new DependencyNodeVisitor() {
             Deque<Artifact> stack = new ArrayDeque<>();
 
             @Override
-            public boolean visit(final DependencyNode dependencyNode)
-            {
+            public boolean visit(final DependencyNode dependencyNode) {
                 stack.push(dependencyNode.getArtifact());
                 return true;
             }
 
             @Override
-            public boolean endVisit(final DependencyNode dependencyNode)
-            {
+            public boolean endVisit(final DependencyNode dependencyNode) {
                 Artifact leaf = dependencyNode.getArtifact();
-                if (!AbstractAlignmentReporterMojo.this.alignmentPattern.matcher(leaf.getVersion()).find())
-                {
+                if (!AbstractAlignmentReporterMojo.this.alignmentPattern
+                    .matcher(leaf.getVersion())
+                    .find()) {
                     deps.add(new ArrayList<>(stack));
                 }
                 stack.pop();
@@ -519,8 +492,7 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
         }, nodeFilter));
     }
 
-    private String getProjectTitle()
-    {
+    private String getProjectTitle() {
         String name = project.getName();
         String projectEyeCatcher = "=".repeat(name.length());
 
@@ -538,21 +510,18 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
      *
      * @return the Maven project
      */
-    public MavenProject getProject()
-    {
+    public MavenProject getProject() {
         return project;
     }
 
     /**
      * @return {@link #skip}
      */
-    public boolean isSkip()
-    {
+    public boolean isSkip() {
         return skip;
     }
 
-    public void setAlignmentPattern(final String alignmentPattern)
-    {
+    public void setAlignmentPattern(final String alignmentPattern) {
         this.alignmentPattern = Pattern.compile(alignmentPattern);
     }
 
@@ -561,38 +530,30 @@ public abstract class AbstractAlignmentReporterMojo extends AbstractMojo
      *
      * @return the artifact filter
      */
-    private ArtifactFilter createScopeResolvingArtifactFilter()
-    {
+    private ArtifactFilter createScopeResolvingArtifactFilter() {
         ArtifactFilter filter;
 
         // filter scope
-        if (scope != null)
-        {
+        if (scope != null) {
             getLog().debug(String.format("+ Resolving dependency tree for scope '%s'", scope));
 
             filter = new ScopeArtifactFilter(scope);
-        }
-        else
-        {
+        } else {
             filter = artifact -> true;
         }
 
         return filter;
     }
 
-    private ArtifactFilter createExcludeFilter()
-    {
+    private ArtifactFilter createExcludeFilter() {
         ArtifactFilter filter;
         // filter excludes
-        if ( excludes != null )
-        {
-            List<String> patterns = Arrays.asList( excludes.split( "," ) );
+        if (excludes != null) {
+            List<String> patterns = Arrays.asList(excludes.split(","));
 
             getLog().debug(String.format("+ Filtering dependency tree by artifact exclude patterns: %s", patterns));
-            filter = new StrictPatternExcludesArtifactFilter( patterns );
-        }
-        else
-        {
+            filter = new StrictPatternExcludesArtifactFilter(patterns);
+        } else {
             filter = artifact -> true;
         }
         return filter;
