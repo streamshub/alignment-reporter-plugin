@@ -20,6 +20,7 @@
 package com.github.streamshub;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
@@ -35,7 +36,9 @@ public class AggregateAlignmentReporterMojo extends AbstractAlignmentReporterMoj
     protected Set<DependencyNode> getDirectDependencies(final ArtifactFilter artifactFilter) throws MojoExecutionException {
         Set<DependencyNode> dependencies = new HashSet<>();
 
-        for (MavenProject reactorProject : reactorProjects) {
+        List<MavenProject> filteredProjects = filterModules(reactorProjects);
+
+        for (MavenProject reactorProject : filteredProjects) {
             dependencies.addAll(getDirectDependencies(reactorProject, artifactFilter));
         }
 

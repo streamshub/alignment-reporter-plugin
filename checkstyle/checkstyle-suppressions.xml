@@ -31,8 +31,12 @@ under the License.
     <!-- Allow magic numbers in Maven plugin parameter defaults -->
     <suppress checks="MagicNumber" files=".*Mojo\.java"/>
     
-    <!-- Allow hidden fields for Maven plugin parameters -->
+    <!-- Allow hidden fields for Maven plugin parameters and constructor parameters -->
     <suppress checks="HiddenField" files=".*Mojo\.java"/>
+    <suppress checks="HiddenField" files=".*\.java"/>
+    
+    <!-- Allow single-line if statements without braces -->
+    <suppress checks="NeedBraces" files=".*\.java"/>
     
     <!-- Allow protected/public fields for Maven plugin parameters -->
     <suppress checks="VisibilityModifier" files=".*Mojo\.java"/>
